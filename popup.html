@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gemini Translator</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>
+                <img src="icon.png" alt="Gemini Translator" class="app-icon">
+                <span>Gemini Translator</span>
+            </h2>
+        </div>
+        <div class="input-group">
+            <label for="inputText">Input Text:</label>
+            <textarea id="inputText" placeholder="Enter text to translate..."></textarea>
+        </div>
+        <div class="select-group">
+            <select id="targetLanguage">
+                <option value="en">English</option>
+                <option value="fa">Persian (Farsi)</option>
+                <option value="fr">French</option>
+                <option value="es">Spanish</option>
+                <option value="de">German</option>
+                <option value="ar">Arabic</option>
+            </select>
+        </div>
+        <button id="translateBtn" class="primary-btn">
+            <i class="fas fa-translate"></i> Translate
+        </button>
+        <div class="output-group">
+            <label for="outputText">Translation:</label>
+            <div class="output-container">
+                <textarea id="outputText" readonly placeholder="Translation will appear here..."></textarea>
+                <button id="copyBtn" class="icon-btn" title="Copy to clipboard">
+                    <i class="fas fa-copy"></i>
+                </button>
+            </div>
+        </div>
+        <div id="error" class="error"></div>
+        <div class="github-info">
+            <a href="https://github.com/Shayan5422" target="_blank" class="github-link">
+                <i class="fab fa-github"></i>
+                <span>@Shayan5422</span>
+            </a>
+            <div class="author">Developed by Shayan Hashemi</div>
+        </div>
+    </div>
+    <script src="popup.js"></script>
+</body>
+</html> 

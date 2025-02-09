@@ -1,0 +1,205 @@
+.app-icon {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    vertical-align: middle;
+}
+
+body {
+    width: 450px;
+    margin: 0;
+    padding: 20px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background-color: #f8f9fa;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    background-color: white;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+h2 {
+    margin: 0;
+    color: #1a73e8;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+h2 i {
+    font-size: 28px;
+}
+
+.input-group, .output-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+label {
+    font-size: 14px;
+    color: #5f6368;
+    font-weight: 500;
+}
+
+textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 12px;
+    border: 1px solid #dadce0;
+    border-radius: 8px;
+    resize: vertical;
+    font-family: inherit;
+    font-size: 15px;
+    line-height: 1.5;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+}
+
+textarea.rtl {
+    direction: rtl;
+    text-align: right;
+}
+
+textarea:focus {
+    outline: none;
+    border-color: #1a73e8;
+}
+
+#outputText {
+    background-color: #f8f9fa;
+}
+
+.output-container {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+}
+
+.select-group {
+    display: flex;
+    justify-content: center;
+}
+
+select {
+    padding: 10px 16px;
+    border: 1px solid #dadce0;
+    border-radius: 8px;
+    width: 200px;
+    font-size: 14px;
+    color: #3c4043;
+    background-color: white;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+select:focus {
+    outline: none;
+    border-color: #1a73e8;
+}
+
+.primary-btn {
+    padding: 12px 24px;
+    background-color: #1a73e8;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background-color 0.2s;
+    width: 200px;
+    margin: 0 auto;
+}
+
+.primary-btn:hover {
+    background-color: #1557b0;
+}
+
+.primary-btn:disabled {
+    background-color: #dadce0;
+    cursor: not-allowed;
+}
+
+.icon-btn {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    padding: 8px;
+    background-color: white;
+    border: 1px solid #dadce0;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #5f6368;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.icon-btn:hover {
+    background-color: #f8f9fa;
+    color: #1a73e8;
+    border-color: #1a73e8;
+}
+
+.error {
+    color: #d93025;
+    font-size: 14px;
+    text-align: center;
+    min-height: 20px;
+    padding: 4px 0;
+}
+
+.github-info {
+    margin-top: 10px;
+    padding-top: 20px;
+    border-top: 1px solid #dadce0;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.github-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #1a73e8;
+    text-decoration: none;
+    font-size: 15px;
+    padding: 8px;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.github-link:hover {
+    background-color: #f8f9fa;
+    color: #1557b0;
+}
+
+.github-link i {
+    font-size: 20px;
+}
+
+.author {
+    color: #5f6368;
+    font-size: 13px;
+} 
