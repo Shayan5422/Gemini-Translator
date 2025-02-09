@@ -23,4 +23,4 @@ For any privacy concerns, please contact us through GitHub: @Shayan5422
 ## Changes to This Policy
 We may update this privacy policy from time to time. Any changes will be posted on this page.
 
-Last updated: [Current Date]
+Last updated: 09/02/2025
