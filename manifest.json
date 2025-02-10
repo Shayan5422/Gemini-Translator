@@ -19,9 +19,7 @@
     }
   },
   "permissions": [
-    "activeTab",
-    "scripting",
-    "storage"
+    "activeTab"
   ],
   "background": {
     "service_worker": "background.js"
