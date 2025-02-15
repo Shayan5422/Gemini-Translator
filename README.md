@@ -15,7 +15,7 @@ A Chrome extension that uses Google's Gemini AI to translate text between differ
 
 1. **Clone the Repository:**
    ```bash
-   git clone https://github.com/Shayan5422/gemini-translate.git
+   git clone https://github.com/Shayan5422/Gemini-Translator.git
    ```
 
 2. **Load the Extension in Chrome:**
