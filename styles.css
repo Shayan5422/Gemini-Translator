@@ -78,8 +78,36 @@ textarea:focus {
     border-color: #1a73e8;
 }
 
+.output-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.icon-btn {
+    padding: 8px;
+    background-color: white;
+    border: 1px solid #dadce0;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #5f6368;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    margin-left: 8px;
+}
+
+.icon-btn:hover {
+    background-color: #f8f9fa;
+    color: #1a73e8;
+    border-color: #1a73e8;
+}
+
 #outputText {
     background-color: #f8f9fa;
+    width: 100%;
 }
 
 .output-container {
@@ -137,26 +165,11 @@ select:focus {
     cursor: not-allowed;
 }
 
-.icon-btn {
-    position: absolute;
-    right: 8px;
-    top: 8px;
-    padding: 8px;
-    background-color: white;
-    border: 1px solid #dadce0;
-    border-radius: 6px;
-    cursor: pointer;
-    color: #5f6368;
+.output-section {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-}
-
-.icon-btn:hover {
-    background-color: #f8f9fa;
-    color: #1a73e8;
-    border-color: #1a73e8;
+    gap: 12px;
+    align-items: flex-start;
+    width: 100%;
 }
 
 .error {

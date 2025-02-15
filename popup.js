@@ -1,4 +1,4 @@
-const GEMINI_API_KEY = "API_KEY";
+const GEMINI_API_KEY = "API_KEY"; //
 const GEMINI_MODEL = "gemini-1.5-flash";
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -119,32 +119,62 @@ document.addEventListener('DOMContentLoaded', function() {
 
 ${text}`;
 
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
-        
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{
-                        text: prompt
-                    }]
-                }]
-            })
-        });
+        const maxRetries = 3;
+        let retryCount = 0;
+        let lastError = null;
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+        while (retryCount < maxRetries) {
+            try {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: prompt
+                            }]
+                        }]
+                    })
+                });
+
+                if (!response.ok) {
+                    if (response.status === 429) {
+                        const waitTime = Math.pow(2, retryCount) * 1000; // Exponential backoff
+                        showError(`Rate limit reached. Retrying in ${waitTime/1000} seconds...`);
+                        await new Promise(resolve => setTimeout(resolve, waitTime));
+                        retryCount++;
+                        continue;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
+                    return data.candidates[0].content.parts[0].text.trim();
+                }
+                
+                throw new Error('Invalid response format from Gemini API');
+            } catch (error) {
+                lastError = error;
+                if (retryCount === maxRetries - 1) {
+                    break;
+                }
+                const waitTime = Math.pow(2, retryCount) * 1000;
+                showError(`Translation failed. Retrying in ${waitTime/1000} seconds...`);
+                await new Promise(resolve => setTimeout(resolve, waitTime));
+                retryCount++;
+            }
         }
 
-        const data = await response.json();
-        
-        if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
-            return data.candidates[0].content.parts[0].text.trim();
+        // If we've exhausted all retries, throw the last error
+        if (lastError.message.includes('429')) {
+            throw new Error('Rate limit exceeded. Please wait a few minutes before trying again.');
         }
-        
-        throw new Error('Invalid response format from Gemini API');
+        throw lastError;
     }
 }); 
