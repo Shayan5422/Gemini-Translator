@@ -8,6 +8,8 @@ A Chrome extension that uses Google's Gemini AI to translate text between differ
 - **Powered by Gemini AI:** Leverages Google's Gemini AI for accurate and natural translations.
 - **User-Friendly Interface:** A simple and intuitive design for quick translations.
 - **Quick & Efficient:** Get instant translations directly within your browser.
+- **Text-to-Speech:** Listen to translated text with native pronunciation in the target language.
+- **Translation History:** Save and access your recent translations for quick reference and reuse.
 
 ## Installation
 
@@ -41,6 +43,15 @@ Alternatively, you can download it from here:
 
 4. **Translate:**
    - Click the **Translate** button to view the translation.
+
+5. **Listen to Translation:**
+   - Click the **Speaker** icon to hear the translated text pronounced in the target language.
+   - Click again to stop the audio playback.
+
+6. **Access Translation History:**
+   - View your recent translations in the history panel.
+   - Click on any previous translation to load it back into the interface.
+   - Clear your history with the "Clear History" button when needed.
 
 ## Contributing
 

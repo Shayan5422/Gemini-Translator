@@ -6,9 +6,45 @@ document.addEventListener('DOMContentLoaded', function() {
     const outputText = document.getElementById('outputText');
     const translateBtn = document.getElementById('translateBtn');
     const copyBtn = document.getElementById('copyBtn');
+    const speakBtn = document.getElementById('speakBtn');
     const targetLanguage = document.getElementById('targetLanguage');
     const textTone = document.getElementById('textTone');
     const errorDiv = document.getElementById('error');
+    
+    // History elements
+    const historyToggle = document.getElementById('historyToggle');
+    const historyContent = document.getElementById('historyContent');
+    const historyList = document.getElementById('historyList');
+    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+    
+    // Translation history array
+    let translationHistory = [];
+    const MAX_HISTORY_ITEMS = 10;
+    
+    // Speech synthesis variables
+    let speechSynthesis = window.speechSynthesis;
+    let speechUtterance = null;
+    let isSpeaking = false;
+
+    // Map of language codes to BCP-47 language tags for speech synthesis
+    const speechLangMap = {
+        'en': 'en-US',
+        'fa': 'fa-IR',
+        'fr': 'fr-FR',
+        'es': 'es-ES',
+        'de': 'de-DE',
+        'ar': 'ar-SA'
+    };
+    
+    // Language display names
+    const languageNames = {
+        'en': 'English',
+        'fa': 'Persian (Farsi)',
+        'fr': 'French',
+        'es': 'Spanish',
+        'de': 'German',
+        'ar': 'Arabic'
+    };
 
     // Load saved state from localStorage
     function loadSavedState() {
@@ -43,6 +79,19 @@ document.addEventListener('DOMContentLoaded', function() {
             outputText.value = savedOutput;
             if (savedOutput.trim() !== '') {
                 copyBtn.style.display = 'block';
+                speakBtn.style.display = 'block';
+            }
+        }
+        
+        // Load translation history
+        const savedHistory = localStorage.getItem('geminiTranslator_history');
+        if (savedHistory) {
+            try {
+                translationHistory = JSON.parse(savedHistory);
+                renderTranslationHistory();
+            } catch (e) {
+                console.error('Error parsing translation history:', e);
+                translationHistory = [];
             }
         }
     }
@@ -54,9 +103,20 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.setItem('geminiTranslator_tone', textTone.value);
         localStorage.setItem('geminiTranslator_outputText', outputText.value);
     }
+    
+    // Save translation history to localStorage
+    function saveTranslationHistory() {
+        localStorage.setItem('geminiTranslator_history', JSON.stringify(translationHistory));
+    }
 
     // Load saved state when plugin opens
     loadSavedState();
+    
+    // Initialize history toggle state
+    if (translationHistory.length === 0) {
+        historyContent.classList.add('collapsed');
+        historyToggle.classList.add('collapsed');
+    }
     
     // Focus input on popup open
     inputText.focus();
@@ -97,6 +157,115 @@ document.addEventListener('DOMContentLoaded', function() {
         saveState(); // Save state when tone changes
     });
 
+    // Toggle translation history panel
+    historyToggle.addEventListener('click', function() {
+        historyContent.classList.toggle('collapsed');
+        historyToggle.classList.toggle('collapsed');
+    });
+    
+    // Clear translation history
+    clearHistoryBtn.addEventListener('click', function() {
+        translationHistory = [];
+        saveTranslationHistory();
+        renderTranslationHistory();
+    });
+    
+    // Add translation to history
+    function addToHistory(inputText, outputText, targetLang, tone) {
+        // Create new history item
+        const historyItem = {
+            id: Date.now(), // Use timestamp as unique ID
+            input: inputText,
+            output: outputText,
+            language: targetLang,
+            tone: tone,
+            timestamp: new Date().toISOString()
+        };
+        
+        // Add to the beginning of array
+        translationHistory.unshift(historyItem);
+        
+        // Limit history to MAX_HISTORY_ITEMS
+        if (translationHistory.length > MAX_HISTORY_ITEMS) {
+            translationHistory = translationHistory.slice(0, MAX_HISTORY_ITEMS);
+        }
+        
+        // Save to localStorage
+        saveTranslationHistory();
+        
+        // Update UI
+        renderTranslationHistory();
+        
+        // Make sure history panel is visible
+        historyContent.classList.remove('collapsed');
+        historyToggle.classList.remove('collapsed');
+    }
+    
+    // Render translation history
+    function renderTranslationHistory() {
+        // Clear current history list
+        historyList.innerHTML = '';
+        
+        if (translationHistory.length === 0) {
+            // Show empty message
+            const emptyMsg = document.createElement('div');
+            emptyMsg.className = 'empty-history';
+            emptyMsg.textContent = 'No translation history yet';
+            historyList.appendChild(emptyMsg);
+            return;
+        }
+        
+        // Add each history item to the list
+        translationHistory.forEach(item => {
+            const historyItem = document.createElement('div');
+            historyItem.className = 'history-item';
+            
+            // Format the timestamp
+            const date = new Date(item.timestamp);
+            const formattedDate = date.toLocaleDateString(undefined, { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+            
+            historyItem.innerHTML = `
+                <div class="history-item-content">
+                    <div class="history-item-text">${item.input}</div>
+                    <div class="history-item-info">
+                        <span>${formattedDate}</span>
+                        <span>${item.tone !== 'neutral' ? '• ' + item.tone : ''}</span>
+                    </div>
+                </div>
+                <div class="history-item-lang">${languageNames[item.language]}</div>
+            `;
+            
+            // Add click event to load this translation
+            historyItem.addEventListener('click', function() {
+                inputText.value = item.input;
+                outputText.value = item.output;
+                targetLanguage.value = item.language;
+                textTone.value = item.tone;
+                
+                // Update text direction
+                updateTextDirection(inputText, item.input);
+                if (item.language === 'fa' || item.language === 'ar') {
+                    outputText.classList.add('rtl');
+                } else {
+                    outputText.classList.remove('rtl');
+                }
+                
+                // Show buttons
+                copyBtn.style.display = 'block';
+                speakBtn.style.display = 'block';
+                
+                // Save state
+                saveState();
+            });
+            
+            historyList.appendChild(historyItem);
+        });
+    }
+
     translateBtn.addEventListener('click', async () => {
         if (!inputText.value.trim()) {
             showError('Please enter some text to translate.');
@@ -118,7 +287,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 outputText.classList.remove('rtl');
             }
             
+            // Add to history
+            addToHistory(inputText.value, response, targetLanguage.value, textTone.value);
+            
             copyBtn.style.display = 'block'; // Show copy button when there's text
+            speakBtn.style.display = 'block'; // Show speak button when there's text
             saveState(); // Save state after translation
         } catch (error) {
             showError('Translation failed. Please try again.');
@@ -146,6 +319,70 @@ document.addEventListener('DOMContentLoaded', function() {
             showError('Failed to copy text.');
         }
     });
+    
+    // Text-to-Speech functionality
+    speakBtn.addEventListener('click', () => {
+        if (isSpeaking) {
+            // Stop speaking if already in progress
+            stopSpeaking();
+        } else {
+            // Start speaking
+            speakText(outputText.value, targetLanguage.value);
+        }
+    });
+    
+    function speakText(text, langCode) {
+        if (!text || !speechSynthesis) {
+            return;
+        }
+        
+        // Cancel any ongoing speech
+        stopSpeaking();
+        
+        // Create a new utterance
+        speechUtterance = new SpeechSynthesisUtterance(text);
+        
+        // Set language based on target language
+        const speechLang = speechLangMap[langCode] || 'en-US';
+        speechUtterance.lang = speechLang;
+        
+        // Get available voices and try to find a matching one
+        setTimeout(() => {
+            const voices = speechSynthesis.getVoices();
+            const languageVoices = voices.filter(voice => voice.lang.startsWith(speechLang.split('-')[0]));
+            
+            if (languageVoices.length > 0) {
+                speechUtterance.voice = languageVoices[0];
+            }
+            
+            // Update UI to show speaking state
+            speakBtn.innerHTML = '<i class="fas fa-stop"></i>';
+            speakBtn.classList.add('speaking');
+            speakBtn.title = 'Stop speaking';
+            isSpeaking = true;
+            
+            // Handle speech end
+            speechUtterance.onend = resetSpeakButton;
+            speechUtterance.onerror = resetSpeakButton;
+            
+            // Start speaking
+            speechSynthesis.speak(speechUtterance);
+        }, 100);
+    }
+    
+    function stopSpeaking() {
+        if (speechSynthesis) {
+            speechSynthesis.cancel();
+        }
+        resetSpeakButton();
+    }
+    
+    function resetSpeakButton() {
+        speakBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+        speakBtn.classList.remove('speaking');
+        speakBtn.title = 'Listen to translation';
+        isSpeaking = false;
+    }
 
     // Handle Enter key in input
     inputText.addEventListener('keydown', (e) => {
@@ -163,15 +400,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function translateText(text, targetLang, tone) {
-        const languageNames = {
-            'en': 'English',
-            'fa': 'Persian (Farsi)',
-            'fr': 'French',
-            'es': 'Spanish',
-            'de': 'German',
-            'ar': 'Arabic'
-        };
-
         const toneInstruction = tone !== 'neutral' 
             ? `The translation should be in a ${tone} tone.` 
             : '';
