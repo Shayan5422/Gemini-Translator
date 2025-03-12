@@ -1,4 +1,4 @@
-const GEMINI_API_KEY = "API_KEY"; //
+const GEMINI_API_KEY = "AIzaSyDmWMrbqJN1K9ACefNKTl5xmWaOLAO0Zt8";
 const GEMINI_MODEL = "gemini-1.5-flash";
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -7,8 +7,57 @@ document.addEventListener('DOMContentLoaded', function() {
     const translateBtn = document.getElementById('translateBtn');
     const copyBtn = document.getElementById('copyBtn');
     const targetLanguage = document.getElementById('targetLanguage');
+    const textTone = document.getElementById('textTone');
     const errorDiv = document.getElementById('error');
 
+    // Load saved state from localStorage
+    function loadSavedState() {
+        // Restore input text
+        const savedInput = localStorage.getItem('geminiTranslator_inputText');
+        if (savedInput) {
+            inputText.value = savedInput;
+            updateTextDirection(inputText, savedInput);
+        }
+        
+        // Restore selected language
+        const savedLanguage = localStorage.getItem('geminiTranslator_language');
+        if (savedLanguage) {
+            targetLanguage.value = savedLanguage;
+            // Apply RTL if needed for the saved language
+            if (savedLanguage === 'fa' || savedLanguage === 'ar') {
+                outputText.classList.add('rtl');
+            } else {
+                outputText.classList.remove('rtl');
+            }
+        }
+        
+        // Restore selected tone
+        const savedTone = localStorage.getItem('geminiTranslator_tone');
+        if (savedTone) {
+            textTone.value = savedTone;
+        }
+        
+        // Restore output text
+        const savedOutput = localStorage.getItem('geminiTranslator_outputText');
+        if (savedOutput) {
+            outputText.value = savedOutput;
+            if (savedOutput.trim() !== '') {
+                copyBtn.style.display = 'block';
+            }
+        }
+    }
+    
+    // Save current state to localStorage
+    function saveState() {
+        localStorage.setItem('geminiTranslator_inputText', inputText.value);
+        localStorage.setItem('geminiTranslator_language', targetLanguage.value);
+        localStorage.setItem('geminiTranslator_tone', textTone.value);
+        localStorage.setItem('geminiTranslator_outputText', outputText.value);
+    }
+
+    // Load saved state when plugin opens
+    loadSavedState();
+    
     // Focus input on popup open
     inputText.focus();
 
@@ -30,6 +79,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle input text direction
     inputText.addEventListener('input', function() {
         updateTextDirection(this, this.value);
+        saveState(); // Save state when typing
     });
 
     // Handle target language change
@@ -39,6 +89,12 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             outputText.classList.remove('rtl');
         }
+        saveState(); // Save state when language changes
+    });
+    
+    // Handle text tone change
+    textTone.addEventListener('change', function() {
+        saveState(); // Save state when tone changes
     });
 
     translateBtn.addEventListener('click', async () => {
@@ -52,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function() {
             translateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Translating...';
             errorDiv.textContent = '';
 
-            const response = await translateText(inputText.value, targetLanguage.value);
+            const response = await translateText(inputText.value, targetLanguage.value, textTone.value);
             outputText.value = response;
             
             // Update output text direction based on target language
@@ -63,6 +119,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             copyBtn.style.display = 'block'; // Show copy button when there's text
+            saveState(); // Save state after translation
         } catch (error) {
             showError('Translation failed. Please try again.');
             console.error('Translation error:', error);
@@ -105,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000); // Clear error after 5 seconds
     }
 
-    async function translateText(text, targetLang) {
+    async function translateText(text, targetLang, tone) {
         const languageNames = {
             'en': 'English',
             'fa': 'Persian (Farsi)',
@@ -115,7 +172,11 @@ document.addEventListener('DOMContentLoaded', function() {
             'ar': 'Arabic'
         };
 
-        const prompt = `Translate the following text to ${languageNames[targetLang]}. Only provide the translation, without any additional explanations or notes:
+        const toneInstruction = tone !== 'neutral' 
+            ? `The translation should be in a ${tone} tone.` 
+            : '';
+
+        const prompt = `Translate the following text to ${languageNames[targetLang]}. ${toneInstruction} Only provide the translation, without any additional explanations or notes:
 
 ${text}`;
 

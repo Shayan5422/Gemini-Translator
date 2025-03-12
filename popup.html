@@ -17,15 +17,27 @@
             <label for="inputText">Input Text:</label>
             <textarea id="inputText" placeholder="Enter text to translate..."></textarea>
         </div>
-        <div class="select-group">
-            <select id="targetLanguage">
-                <option value="en">English</option>
-                <option value="fa">Persian (Farsi)</option>
-                <option value="fr">French</option>
-                <option value="es">Spanish</option>
-                <option value="de">German</option>
-                <option value="ar">Arabic</option>
-            </select>
+        <div class="selections-container">
+            <div class="select-group">
+                <select id="targetLanguage">
+                    <option value="en">English</option>
+                    <option value="fa">Persian (Farsi)</option>
+                    <option value="fr">French</option>
+                    <option value="es">Spanish</option>
+                    <option value="de">German</option>
+                    <option value="ar">Arabic</option>
+                </select>
+            </div>
+            <div class="select-group">
+                <select id="textTone">
+                    <option value="neutral">Neutral</option>
+                    <option value="formal">Formal</option>
+                    <option value="informal">Informal</option>
+                    <option value="professional">Professional</option>
+                    <option value="friendly">Friendly</option>
+                    <option value="academic">Academic</option>
+                </select>
+            </div>
         </div>
         <button id="translateBtn" class="primary-btn">
             <i class="fas fa-translate"></i> Translate
