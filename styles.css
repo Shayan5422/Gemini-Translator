@@ -381,4 +381,49 @@ select:focus {
     text-align: center;
     color: #5f6368;
     font-style: italic;
+}
+
+.input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.input-wrapper textarea {
+    width: 100%;
+}
+
+.clear-btn {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: #f1f3f4;
+    border: none;
+    color: #5f6368;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px;
+    border-radius: 50%;
+    display: none;
+    transition: color 0.2s, background-color 0.2s;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.clear-btn:hover {
+    color: #1a73e8;
+    background-color: #e8f0fe;
+}
+
+.rtl .clear-btn {
+    right: auto;
+    left: -10px;
+}
+
+.rtl .input-wrapper {
+    flex-direction: row-reverse;
 } 

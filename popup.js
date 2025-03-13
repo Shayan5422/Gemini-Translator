@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const targetLanguage = document.getElementById('targetLanguage');
     const textTone = document.getElementById('textTone');
     const errorDiv = document.getElementById('error');
+    const clearInputBtn = document.getElementById('clearInputBtn');
     
     // History elements
     const historyToggle = document.getElementById('historyToggle');
@@ -53,6 +54,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (savedInput) {
             inputText.value = savedInput;
             updateTextDirection(inputText, savedInput);
+            
+            // Show clear button if there's text
+            if (savedInput.trim() !== '') {
+                clearInputBtn.style.display = 'flex';
+            }
         }
         
         // Restore selected language
@@ -136,10 +142,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Handle input text direction
+    // Handle input text direction and clear button visibility
     inputText.addEventListener('input', function() {
         updateTextDirection(this, this.value);
+        // Show/hide clear button based on input content
+        if (this.value.trim() !== '') {
+            clearInputBtn.style.display = 'flex';
+        } else {
+            clearInputBtn.style.display = 'none';
+        }
         saveState(); // Save state when typing
+    });
+
+    // Clear input text when clear button is clicked
+    clearInputBtn.addEventListener('click', function() {
+        inputText.value = '';
+        clearInputBtn.style.display = 'none';
+        saveState();
+        inputText.focus();
     });
 
     // Handle target language change
@@ -233,7 +253,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="history-item-text">${item.input}</div>
                     <div class="history-item-info">
                         <span>${formattedDate}</span>
-                        <span>${item.tone !== 'neutral' ? '• ' + item.tone : ''}</span>
+                        <span>${item.tone !== 'neutral' ? '&bull; ' + item.tone : ''}</span>
                     </div>
                 </div>
                 <div class="history-item-lang">${languageNames[item.language]}</div>
