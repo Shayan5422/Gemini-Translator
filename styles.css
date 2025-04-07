@@ -143,8 +143,7 @@ textarea:focus {
 }
 
 .select-group {
-    position: relative;
-    margin-bottom: 5px;
+    margin-bottom: 10px;
 }
 
 select {
@@ -250,6 +249,7 @@ select:focus {
 
 .selections-container {
     display: flex;
+    flex-wrap: wrap;
     gap: 10px;
     margin-bottom: 15px;
 }
@@ -426,4 +426,25 @@ select:focus {
 
 .rtl .input-wrapper {
     flex-direction: row-reverse;
+}
+
+/* Custom language input styling */
+#customLanguage {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.3s;
+}
+
+#customLanguage:focus {
+    border-color: #1a73e8;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+}
+
+.custom-language-container {
+    margin-bottom: 15px;
+    width: 100%;
 } 

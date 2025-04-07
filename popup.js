@@ -12,6 +12,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const errorDiv = document.getElementById('error');
     const clearInputBtn = document.getElementById('clearInputBtn');
     
+    // Custom language elements
+    const customLanguageContainer = document.getElementById('customLanguageContainer');
+    const customLanguage = document.getElementById('customLanguage');
+    
     // History elements
     const historyToggle = document.getElementById('historyToggle');
     const historyContent = document.getElementById('historyContent');
@@ -34,7 +38,9 @@ document.addEventListener('DOMContentLoaded', function() {
         'fr': 'fr-FR',
         'es': 'es-ES',
         'de': 'de-DE',
-        'ar': 'ar-SA'
+        'ar': 'ar-SA',
+        'ta': 'ta-IN'
+
     };
     
     // Language display names
@@ -44,7 +50,8 @@ document.addEventListener('DOMContentLoaded', function() {
         'fr': 'French',
         'es': 'Spanish',
         'de': 'German',
-        'ar': 'Arabic'
+        'ar': 'Arabic',
+        'ta': 'Tamil'
     };
 
     // Load saved state from localStorage
@@ -70,6 +77,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 outputText.classList.add('rtl');
             } else {
                 outputText.classList.remove('rtl');
+            }
+
+            // Show custom language field if 'other' was selected
+            if (savedLanguage === 'other') {
+                customLanguageContainer.style.display = 'block';
+                
+                // Load saved custom language
+                const savedCustomLang = localStorage.getItem('geminiTranslator_customLanguage');
+                if (savedCustomLang) {
+                    customLanguage.value = savedCustomLang;
+                }
             }
         }
         
@@ -108,6 +126,11 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.setItem('geminiTranslator_language', targetLanguage.value);
         localStorage.setItem('geminiTranslator_tone', textTone.value);
         localStorage.setItem('geminiTranslator_outputText', outputText.value);
+        
+        // Save custom language if applicable
+        if (targetLanguage.value === 'other') {
+            localStorage.setItem('geminiTranslator_customLanguage', customLanguage.value);
+        }
     }
     
     // Save translation history to localStorage
@@ -169,7 +192,21 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             outputText.classList.remove('rtl');
         }
+
+        // Handle custom language option
+        if (this.value === 'other') {
+            customLanguageContainer.style.display = 'block';
+            customLanguage.focus();
+        } else {
+            customLanguageContainer.style.display = 'none';
+        }
+        
         saveState(); // Save state when language changes
+    });
+    
+    // Save custom language input when it changes
+    customLanguage.addEventListener('input', function() {
+        saveState();
     });
     
     // Handle text tone change
@@ -192,12 +229,16 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Add translation to history
     function addToHistory(inputText, outputText, targetLang, tone) {
+        // Get language display name
+        let langDisplayName = targetLang === 'other' ? customLanguage.value : languageNames[targetLang];
+        
         // Create new history item
         const historyItem = {
             id: Date.now(), // Use timestamp as unique ID
             input: inputText,
             output: outputText,
             language: targetLang,
+            languageName: langDisplayName,
             tone: tone,
             timestamp: new Date().toISOString()
         };
@@ -248,6 +289,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 day: 'numeric' 
             });
             
+            // Get language display name
+            const langName = item.languageName || (item.language === 'other' ? customLanguage.value : languageNames[item.language]);
+            
             historyItem.innerHTML = `
                 <div class="history-item-content">
                     <div class="history-item-text">${item.input}</div>
@@ -256,7 +300,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <span>${item.tone !== 'neutral' ? '&bull; ' + item.tone : ''}</span>
                     </div>
                 </div>
-                <div class="history-item-lang">${languageNames[item.language]}</div>
+                <div class="history-item-lang">${langName}</div>
             `;
             
             // Add click event to load this translation
@@ -424,7 +468,17 @@ document.addEventListener('DOMContentLoaded', function() {
             ? `The translation should be in a ${tone} tone.` 
             : '';
 
-        const prompt = `Translate the following text to ${languageNames[targetLang]}. ${toneInstruction} Only provide the translation, without any additional explanations or notes:
+        // Determine the language name for translation
+        const langNameForTranslation = targetLang === 'other' 
+            ? customLanguage.value 
+            : languageNames[targetLang];
+            
+        // Validate custom language input
+        if (targetLang === 'other' && !langNameForTranslation.trim()) {
+            throw new Error('Please enter a language name.');
+        }
+
+        const prompt = `Translate the following text to ${langNameForTranslation}. ${toneInstruction} Only provide the translation, without any additional explanations or notes:
 
 ${text}`;
 
