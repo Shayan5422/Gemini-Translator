@@ -1,5 +1,7 @@
-const GEMINI_API_KEY = "AIzaSyDmWMrbqJN1K9ACefNKTl5xmWaOLAO0Zt8";
-const GEMINI_MODEL = "gemini-1.5-flash";
+const GLM_API_KEY = "5d509feac1944ce3b145a35b199a0469.OZsl5lsThjwCl8dS";
+const GLM_MODEL = "GLM-4.5-Flash";
+const GLM_ENDPOINT = "https://api.z.ai/api/paas/v4/chat/completions";
+const GLM_SYSTEM_PROMPT = "You are a helpful AI assistant.";
 
 document.addEventListener('DOMContentLoaded', function() {
     const inputText = document.getElementById('inputText');
@@ -488,19 +490,25 @@ ${text}`;
 
         while (retryCount < maxRetries) {
             try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
-                
-                const response = await fetch(url, {
+                const response = await fetch(GLM_ENDPOINT, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        
+                        'Authorization': `Bearer ${GLM_API_KEY}`,
                     },
                     body: JSON.stringify({
-                        contents: [{
-                            parts: [{
-                                text: prompt
-                            }]
-                        }]
+                        model: GLM_MODEL,
+                        messages: [
+                            {
+                                role: 'system',
+                                content: GLM_SYSTEM_PROMPT
+                            },
+                            {
+                                role: 'user',
+                                content: prompt
+                            }
+                        ]
                     })
                 });
 
@@ -517,11 +525,39 @@ ${text}`;
 
                 const data = await response.json();
                 
-                if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
-                    return data.candidates[0].content.parts[0].text.trim();
+                if (data.error?.message) {
+                    throw new Error(data.error.message);
+                }
+
+                const messageContent = data.choices?.[0]?.message?.content;
+
+                if (typeof messageContent === 'string') {
+                    const trimmedContent = messageContent.trim();
+                    if (trimmedContent) {
+                        return trimmedContent;
+                    }
+                }
+
+                if (Array.isArray(messageContent)) {
+                    const combinedContent = messageContent
+                        .map(part => {
+                            if (typeof part === 'string') {
+                                return part;
+                            }
+                            if (part && typeof part === 'object') {
+                                return part.text || '';
+                            }
+                            return '';
+                        })
+                        .join('')
+                        .trim();
+
+                    if (combinedContent) {
+                        return combinedContent;
+                    }
                 }
                 
-                throw new Error('Invalid response format from Gemini API');
+                throw new Error('Invalid response format from GLM API');
             } catch (error) {
                 lastError = error;
                 if (retryCount === maxRetries - 1) {
