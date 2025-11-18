@@ -1,9 +1,19 @@
-const GLM_API_KEY = "5d509feac1944ce3b145a35b199a0469.OZsl5lsThjwCl8dS";
-const GLM_MODEL = "GLM-4.5-Flash";
-const GLM_ENDPOINT = "https://api.z.ai/api/paas/v4/chat/completions";
-const GLM_SYSTEM_PROMPT = "You are a helpful AI assistant.";
+// Gemini API Configuration
+const GEMINI_API_KEY = "AIzaSyAsjR35P6w8iExh3wVd9GQc9V3s9yXTB18"; // Replace with your actual Gemini API key
+const GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/";
 
-document.addEventListener('DOMContentLoaded', function() {
+// Gemini models in priority order (will try from top to bottom)
+const GEMINI_MODELS = [
+    { name: "gemini-2.5-flash", rpm: 10, tpm: 250000, rpd: 250 },
+    { name: "gemini-2.0-flash-lite", rpm: 30, tpm: 1000000, rpd: 200 },
+    { name: "gemini-2.5-flash-lite-preview", rpm: 15, tpm: 250000, rpd: 1000 },
+    { name: "gemini-2.0-flash", rpm: 15, tpm: 1000000, rpd: 200 },
+    { name: "gemini-2.5-flash-preview", rpm: 10, tpm: 250000, rpd: 250 },
+    { name: "gemini-2.5-flash-lite", rpm: 15, tpm: 250000, rpd: 1000 },
+    { name: "gemini-2.5-pro", rpm: 2, tpm: 125000, rpd: 50 },
+];
+
+document.addEventListener('DOMContentLoaded', function () {
     const inputText = document.getElementById('inputText');
     const outputText = document.getElementById('outputText');
     const translateBtn = document.getElementById('translateBtn');
@@ -13,21 +23,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const textTone = document.getElementById('textTone');
     const errorDiv = document.getElementById('error');
     const clearInputBtn = document.getElementById('clearInputBtn');
-    
+
     // Custom language elements
     const customLanguageContainer = document.getElementById('customLanguageContainer');
     const customLanguage = document.getElementById('customLanguage');
-    
+
     // History elements
     const historyToggle = document.getElementById('historyToggle');
     const historyContent = document.getElementById('historyContent');
     const historyList = document.getElementById('historyList');
     const clearHistoryBtn = document.getElementById('clearHistoryBtn');
-    
+
     // Translation history array
     let translationHistory = [];
     const MAX_HISTORY_ITEMS = 10;
-    
+
     // Speech synthesis variables
     let speechSynthesis = window.speechSynthesis;
     let speechUtterance = null;
@@ -44,7 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
         'ta': 'ta-IN'
 
     };
-    
+
     // Language display names
     const languageNames = {
         'en': 'English',
@@ -63,13 +73,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (savedInput) {
             inputText.value = savedInput;
             updateTextDirection(inputText, savedInput);
-            
+
             // Show clear button if there's text
             if (savedInput.trim() !== '') {
                 clearInputBtn.style.display = 'flex';
             }
         }
-        
+
         // Restore selected language
         const savedLanguage = localStorage.getItem('geminiTranslator_language');
         if (savedLanguage) {
@@ -84,7 +94,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Show custom language field if 'other' was selected
             if (savedLanguage === 'other') {
                 customLanguageContainer.style.display = 'block';
-                
+
                 // Load saved custom language
                 const savedCustomLang = localStorage.getItem('geminiTranslator_customLanguage');
                 if (savedCustomLang) {
@@ -92,13 +102,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         }
-        
+
         // Restore selected tone
         const savedTone = localStorage.getItem('geminiTranslator_tone');
         if (savedTone) {
             textTone.value = savedTone;
         }
-        
+
         // Restore output text
         const savedOutput = localStorage.getItem('geminiTranslator_outputText');
         if (savedOutput) {
@@ -108,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 speakBtn.style.display = 'block';
             }
         }
-        
+
         // Load translation history
         const savedHistory = localStorage.getItem('geminiTranslator_history');
         if (savedHistory) {
@@ -121,20 +131,20 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
-    
+
     // Save current state to localStorage
     function saveState() {
         localStorage.setItem('geminiTranslator_inputText', inputText.value);
         localStorage.setItem('geminiTranslator_language', targetLanguage.value);
         localStorage.setItem('geminiTranslator_tone', textTone.value);
         localStorage.setItem('geminiTranslator_outputText', outputText.value);
-        
+
         // Save custom language if applicable
         if (targetLanguage.value === 'other') {
             localStorage.setItem('geminiTranslator_customLanguage', customLanguage.value);
         }
     }
-    
+
     // Save translation history to localStorage
     function saveTranslationHistory() {
         localStorage.setItem('geminiTranslator_history', JSON.stringify(translationHistory));
@@ -142,13 +152,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Load saved state when plugin opens
     loadSavedState();
-    
+
     // Initialize history toggle state
     if (translationHistory.length === 0) {
         historyContent.classList.add('collapsed');
         historyToggle.classList.add('collapsed');
     }
-    
+
     // Focus input on popup open
     inputText.focus();
 
@@ -168,7 +178,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Handle input text direction and clear button visibility
-    inputText.addEventListener('input', function() {
+    inputText.addEventListener('input', function () {
         updateTextDirection(this, this.value);
         // Show/hide clear button based on input content
         if (this.value.trim() !== '') {
@@ -180,7 +190,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Clear input text when clear button is clicked
-    clearInputBtn.addEventListener('click', function() {
+    clearInputBtn.addEventListener('click', function () {
         inputText.value = '';
         clearInputBtn.style.display = 'none';
         saveState();
@@ -188,7 +198,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Handle target language change
-    targetLanguage.addEventListener('change', function() {
+    targetLanguage.addEventListener('change', function () {
         if (this.value === 'fa' || this.value === 'ar') {
             outputText.classList.add('rtl');
         } else {
@@ -202,38 +212,38 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             customLanguageContainer.style.display = 'none';
         }
-        
+
         saveState(); // Save state when language changes
     });
-    
+
     // Save custom language input when it changes
-    customLanguage.addEventListener('input', function() {
+    customLanguage.addEventListener('input', function () {
         saveState();
     });
-    
+
     // Handle text tone change
-    textTone.addEventListener('change', function() {
+    textTone.addEventListener('change', function () {
         saveState(); // Save state when tone changes
     });
 
     // Toggle translation history panel
-    historyToggle.addEventListener('click', function() {
+    historyToggle.addEventListener('click', function () {
         historyContent.classList.toggle('collapsed');
         historyToggle.classList.toggle('collapsed');
     });
-    
+
     // Clear translation history
-    clearHistoryBtn.addEventListener('click', function() {
+    clearHistoryBtn.addEventListener('click', function () {
         translationHistory = [];
         saveTranslationHistory();
         renderTranslationHistory();
     });
-    
+
     // Add translation to history
     function addToHistory(inputText, outputText, targetLang, tone) {
         // Get language display name
         let langDisplayName = targetLang === 'other' ? customLanguage.value : languageNames[targetLang];
-        
+
         // Create new history item
         const historyItem = {
             id: Date.now(), // Use timestamp as unique ID
@@ -244,31 +254,31 @@ document.addEventListener('DOMContentLoaded', function() {
             tone: tone,
             timestamp: new Date().toISOString()
         };
-        
+
         // Add to the beginning of array
         translationHistory.unshift(historyItem);
-        
+
         // Limit history to MAX_HISTORY_ITEMS
         if (translationHistory.length > MAX_HISTORY_ITEMS) {
             translationHistory = translationHistory.slice(0, MAX_HISTORY_ITEMS);
         }
-        
+
         // Save to localStorage
         saveTranslationHistory();
-        
+
         // Update UI
         renderTranslationHistory();
-        
+
         // Make sure history panel is visible
         historyContent.classList.remove('collapsed');
         historyToggle.classList.remove('collapsed');
     }
-    
+
     // Render translation history
     function renderTranslationHistory() {
         // Clear current history list
         historyList.innerHTML = '';
-        
+
         if (translationHistory.length === 0) {
             // Show empty message
             const emptyMsg = document.createElement('div');
@@ -277,23 +287,23 @@ document.addEventListener('DOMContentLoaded', function() {
             historyList.appendChild(emptyMsg);
             return;
         }
-        
+
         // Add each history item to the list
         translationHistory.forEach(item => {
             const historyItem = document.createElement('div');
             historyItem.className = 'history-item';
-            
+
             // Format the timestamp
             const date = new Date(item.timestamp);
-            const formattedDate = date.toLocaleDateString(undefined, { 
-                year: 'numeric', 
-                month: 'short', 
-                day: 'numeric' 
+            const formattedDate = date.toLocaleDateString(undefined, {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
             });
-            
+
             // Get language display name
             const langName = item.languageName || (item.language === 'other' ? customLanguage.value : languageNames[item.language]);
-            
+
             historyItem.innerHTML = `
                 <div class="history-item-content">
                     <div class="history-item-text">${item.input}</div>
@@ -304,14 +314,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 <div class="history-item-lang">${langName}</div>
             `;
-            
+
             // Add click event to load this translation
-            historyItem.addEventListener('click', function() {
+            historyItem.addEventListener('click', function () {
                 inputText.value = item.input;
                 outputText.value = item.output;
                 targetLanguage.value = item.language;
                 textTone.value = item.tone;
-                
+
                 // Update text direction
                 updateTextDirection(inputText, item.input);
                 if (item.language === 'fa' || item.language === 'ar') {
@@ -319,15 +329,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     outputText.classList.remove('rtl');
                 }
-                
+
                 // Show buttons
                 copyBtn.style.display = 'block';
                 speakBtn.style.display = 'block';
-                
+
                 // Save state
                 saveState();
             });
-            
+
             historyList.appendChild(historyItem);
         });
     }
@@ -345,17 +355,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const response = await translateText(inputText.value, targetLanguage.value, textTone.value);
             outputText.value = response;
-            
+
             // Update output text direction based on target language
             if (targetLanguage.value === 'fa' || targetLanguage.value === 'ar') {
                 outputText.classList.add('rtl');
             } else {
                 outputText.classList.remove('rtl');
             }
-            
+
             // Add to history
             addToHistory(inputText.value, response, targetLanguage.value, textTone.value);
-            
+
             copyBtn.style.display = 'block'; // Show copy button when there's text
             speakBtn.style.display = 'block'; // Show speak button when there's text
             saveState(); // Save state after translation
@@ -371,12 +381,12 @@ document.addEventListener('DOMContentLoaded', function() {
     copyBtn.addEventListener('click', async () => {
         try {
             await navigator.clipboard.writeText(outputText.value);
-            
+
             // Visual feedback
             const originalIcon = copyBtn.innerHTML;
             copyBtn.innerHTML = '<i class="fas fa-check"></i>';
             copyBtn.style.color = '#34A853';
-            
+
             setTimeout(() => {
                 copyBtn.innerHTML = originalIcon;
                 copyBtn.style.color = '';
@@ -385,7 +395,7 @@ document.addEventListener('DOMContentLoaded', function() {
             showError('Failed to copy text.');
         }
     });
-    
+
     // Text-to-Speech functionality
     speakBtn.addEventListener('click', () => {
         if (isSpeaking) {
@@ -396,53 +406,53 @@ document.addEventListener('DOMContentLoaded', function() {
             speakText(outputText.value, targetLanguage.value);
         }
     });
-    
+
     function speakText(text, langCode) {
         if (!text || !speechSynthesis) {
             return;
         }
-        
+
         // Cancel any ongoing speech
         stopSpeaking();
-        
+
         // Create a new utterance
         speechUtterance = new SpeechSynthesisUtterance(text);
-        
+
         // Set language based on target language
         const speechLang = speechLangMap[langCode] || 'en-US';
         speechUtterance.lang = speechLang;
-        
+
         // Get available voices and try to find a matching one
         setTimeout(() => {
             const voices = speechSynthesis.getVoices();
             const languageVoices = voices.filter(voice => voice.lang.startsWith(speechLang.split('-')[0]));
-            
+
             if (languageVoices.length > 0) {
                 speechUtterance.voice = languageVoices[0];
             }
-            
+
             // Update UI to show speaking state
             speakBtn.innerHTML = '<i class="fas fa-stop"></i>';
             speakBtn.classList.add('speaking');
             speakBtn.title = 'Stop speaking';
             isSpeaking = true;
-            
+
             // Handle speech end
             speechUtterance.onend = resetSpeakButton;
             speechUtterance.onerror = resetSpeakButton;
-            
+
             // Start speaking
             speechSynthesis.speak(speechUtterance);
         }, 100);
     }
-    
+
     function stopSpeaking() {
         if (speechSynthesis) {
             speechSynthesis.cancel();
         }
         resetSpeakButton();
     }
-    
+
     function resetSpeakButton() {
         speakBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
         speakBtn.classList.remove('speaking');
@@ -466,114 +476,124 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function translateText(text, targetLang, tone) {
-        const toneInstruction = tone !== 'neutral' 
-            ? `The translation should be in a ${tone} tone.` 
+        const toneInstruction = tone !== 'neutral'
+            ? `The translation should be in a ${tone} tone.`
             : '';
 
         // Determine the language name for translation
-        const langNameForTranslation = targetLang === 'other' 
-            ? customLanguage.value 
+        const langNameForTranslation = targetLang === 'other'
+            ? customLanguage.value
             : languageNames[targetLang];
-            
+
         // Validate custom language input
         if (targetLang === 'other' && !langNameForTranslation.trim()) {
             throw new Error('Please enter a language name.');
         }
 
-        const prompt = `Translate the following text to ${langNameForTranslation}. ${toneInstruction} Only provide the translation, without any additional explanations or notes:
+        const prompt = `Translate the following text to ${langNameForTranslation}. ${toneInstruction} Only provide the translation, without any additional explanations or notes:\n\n${text}`;
 
-${text}`;
-
-        const maxRetries = 3;
-        let retryCount = 0;
+        // Try each model in order until one succeeds
         let lastError = null;
 
-        while (retryCount < maxRetries) {
+        for (let modelIndex = 0; modelIndex < GEMINI_MODELS.length; modelIndex++) {
+            const model = GEMINI_MODELS[modelIndex];
+
             try {
-                const response = await fetch(GLM_ENDPOINT, {
+                // Show which model we're trying
+                if (modelIndex > 0) {
+                    showError(`Trying ${model.name}...`);
+                }
+
+                const endpoint = `${GEMINI_ENDPOINT}${model.name}:generateContent?key=${GEMINI_API_KEY}`;
+
+                const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        
-                        'Authorization': `Bearer ${GLM_API_KEY}`,
                     },
                     body: JSON.stringify({
-                        model: GLM_MODEL,
-                        messages: [
-                            {
-                                role: 'system',
-                                content: GLM_SYSTEM_PROMPT
-                            },
-                            {
-                                role: 'user',
-                                content: prompt
-                            }
-                        ]
+                        contents: [{
+                            parts: [{
+                                text: prompt
+                            }]
+                        }],
+                        generationConfig: {
+                            temperature: 0.3,
+                            topK: 40,
+                            topP: 0.95,
+                            maxOutputTokens: 8192,
+                        }
                     })
                 });
 
                 if (!response.ok) {
-                    if (response.status === 429) {
-                        const waitTime = Math.pow(2, retryCount) * 1000; // Exponential backoff
-                        showError(`Rate limit reached. Retrying in ${waitTime/1000} seconds...`);
-                        await new Promise(resolve => setTimeout(resolve, waitTime));
-                        retryCount++;
+                    const errorData = await response.json().catch(() => ({}));
+
+                    // If rate limit or quota exceeded, try next model
+                    if (response.status === 429 || response.status === 503) {
+                        lastError = new Error(`${model.name}: Rate limit or quota exceeded`);
+                        continue; // Try next model
+                    }
+
+                    // If this is not the last model, try the next one
+                    if (modelIndex < GEMINI_MODELS.length - 1) {
+                        lastError = new Error(`${model.name}: HTTP ${response.status}`);
                         continue;
                     }
+
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
                 const data = await response.json();
-                
-                if (data.error?.message) {
+
+                // Check for API errors
+                if (data.error) {
+                    // If rate limit or resource exhausted, try next model
+                    if (data.error.code === 429 || data.error.code === 503 ||
+                        data.error.message?.includes('RESOURCE_EXHAUSTED') ||
+                        data.error.message?.includes('RATE_LIMIT')) {
+                        lastError = new Error(`${model.name}: ${data.error.message}`);
+                        continue; // Try next model
+                    }
+
+                    // For other errors, if not last model, try next
+                    if (modelIndex < GEMINI_MODELS.length - 1) {
+                        lastError = new Error(`${model.name}: ${data.error.message}`);
+                        continue;
+                    }
+
                     throw new Error(data.error.message);
                 }
 
-                const messageContent = data.choices?.[0]?.message?.content;
-
-                if (typeof messageContent === 'string') {
-                    const trimmedContent = messageContent.trim();
-                    if (trimmedContent) {
-                        return trimmedContent;
-                    }
+                // Extract the translation from the response
+                const candidate = data.candidates?.[0];
+                if (!candidate) {
+                    throw new Error('No response from model');
                 }
 
-                if (Array.isArray(messageContent)) {
-                    const combinedContent = messageContent
-                        .map(part => {
-                            if (typeof part === 'string') {
-                                return part;
-                            }
-                            if (part && typeof part === 'object') {
-                                return part.text || '';
-                            }
-                            return '';
-                        })
-                        .join('')
-                        .trim();
+                const textContent = candidate.content?.parts?.[0]?.text;
 
-                    if (combinedContent) {
-                        return combinedContent;
-                    }
+                if (typeof textContent === 'string' && textContent.trim()) {
+                    // Success! Return the translation
+                    return textContent.trim();
                 }
-                
-                throw new Error('Invalid response format from GLM API');
+
+                throw new Error('Invalid response format from Gemini API');
+
             } catch (error) {
                 lastError = error;
-                if (retryCount === maxRetries - 1) {
+
+                // If this is the last model, throw the error
+                if (modelIndex === GEMINI_MODELS.length - 1) {
                     break;
                 }
-                const waitTime = Math.pow(2, retryCount) * 1000;
-                showError(`Translation failed. Retrying in ${waitTime/1000} seconds...`);
-                await new Promise(resolve => setTimeout(resolve, waitTime));
-                retryCount++;
+
+                // Otherwise, continue to next model
+                console.log(`Model ${model.name} failed:`, error.message);
             }
         }
 
-        // If we've exhausted all retries, throw the last error
-        if (lastError.message.includes('429')) {
-            throw new Error('Rate limit exceeded. Please wait a few minutes before trying again.');
-        }
-        throw lastError;
+        // If we've tried all models and none succeeded, throw the last error
+        throw new Error(`All models failed. Last error: ${lastError?.message || 'Unknown error'}`);
     }
 }); 
