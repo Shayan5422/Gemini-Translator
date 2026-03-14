@@ -1,5 +1,5 @@
 // Gemini API Configuration
-const GEMINI_API_KEY = "AIzaSyAPSVgtO3PmmU-ZJ1NBozYV0AQnpho-yfc"; // Replace with your actual Gemini API key
+const GEMINI_API_KEY = "AIzaSyDQ2i7EzJT_SMvq8w6AjwBGQ-WobLUhNuU"; // Replace with your actual Gemini API key
 const GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/";
 
 // Gemini models in priority order (will try from top to bottom)
